@@ -53,7 +53,7 @@ function initReceiver() {
   appConfig.statusText = 'Ready to play';
   appConfig.maxInactivity = 6000;
 
-  window.messageBus = window.castReceiverManager.getCastMessageBus('urn:x-cast:de.geekonaut.triviatime');
+  window.messageBus = window.castReceiverManager.getCastMessageBus('urn:x-cast:de.geekonaut.webgldemo');
   window.castReceiverManager.start(appConfig);
 
   window.castReceiverManager.onReady = function(event) {
