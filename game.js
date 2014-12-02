@@ -2,7 +2,7 @@ var World  = require('./world.js'),
     Player = require('./player.js'),
     pivot;
 
-function startGame() {
+function initGame() {
   function makeSkybox(world) {
     var imagePrefix = "images/dawnmountain-";
     var directions  = ["xpos", "xneg", "ypos", "yneg", "zpos", "zneg"];
@@ -37,13 +37,13 @@ function startGame() {
   Player.init().then(function() {
     var playerMesh = Player.getMesh();
     pivot.add(playerMesh);
+    document.body.removeChild(document.querySelector('h1'));
+    World.startRenderLoop();
   });
 
   World.add(pivot);
 
   makeSkybox(World);
-
-  World.startRenderLoop();
 }
 
 function initReceiver() {
@@ -64,7 +64,6 @@ function initReceiver() {
   window.castReceiverManager.onSenderConnected = function(event) {
     console.log('Received Sender Connected event: ' + event.data);
     console.log(window.castReceiverManager.getSender(event.data).userAgent);
-    startGame();
   };
 
   window.messageBus.onMessage = function(msg) {
@@ -85,27 +84,7 @@ function initReceiver() {
   }
 }
 
-/*
-function initPeerSession() {
-  var peer = new Peer({key: '7nxxqfxzhestt9'});
-  window.peer = peer;
-
-  peer.on('open', function(id) {
-    var h1 = document.createElement('h1');
-    h1.textContent = "Game ID: " + id;
-    document.body.addChild(h1);
-  });
-
-  peer.on('connection', function(c) {
-    console.log("CONTROLS ESTABLISHED", c);
-    document.body.removeChild(document.querySelector('h1'));
-    c.on('data', function(data) {
-    });
-  });
-}
-*/
-
 window.onload = function() {
   initReceiver();
-//  initPeerSession();
+  initGame();
 };
