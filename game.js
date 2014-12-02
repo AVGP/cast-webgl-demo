@@ -1,47 +1,111 @@
 var World  = require('./world.js'),
-        Player = require('./player.js');
+    Player = require('./player.js'),
+    pivot;
 
-function makeSkybox(world) {
-  var imagePrefix = "images/dawnmountain-";
-  var directions  = ["xpos", "xneg", "ypos", "yneg", "zpos", "zneg"];
-  var imageSuffix = ".png";
-  var skyGeometry = new THREE.BoxGeometry( 2000, 2000, 2000 );
+function startGame() {
+  function makeSkybox(world) {
+    var imagePrefix = "images/dawnmountain-";
+    var directions  = ["xpos", "xneg", "ypos", "yneg", "zpos", "zneg"];
+    var imageSuffix = ".png";
+    var skyGeometry = new THREE.BoxGeometry( 2000, 2000, 2000 );
 
-  var materialArray = [];
-  for (var i = 0; i < 6; i++)
-    materialArray.push( new THREE.MeshBasicMaterial({
-      map: THREE.ImageUtils.loadTexture( imagePrefix + directions[i] + imageSuffix ),
-      side: THREE.BackSide
-    }));
-  var skyMaterial = new THREE.MeshFaceMaterial( materialArray );
-  var skyBox = new THREE.Mesh( skyGeometry, skyMaterial );
-  world.add( skyBox );
+    var materialArray = [];
+    for (var i = 0; i < 6; i++)
+      materialArray.push( new THREE.MeshBasicMaterial({
+        map: THREE.ImageUtils.loadTexture( imagePrefix + directions[i] + imageSuffix ),
+        side: THREE.BackSide
+      }));
+    var skyMaterial = new THREE.MeshFaceMaterial( materialArray );
+    var skyBox = new THREE.Mesh( skyGeometry, skyMaterial );
+    world.add( skyBox );
+  }
+
+  World.init({renderCallback: function() {
+    if(window.update) window.update();
+    pivot.translateZ(-1);
+  }});
+
+  var g = new THREE.BoxGeometry(10, 10, 10),
+      m = new THREE.MeshBasicMaterial({color: 0x00ff00}),
+      c = new THREE.Mesh(g, m);
+
+  window.world = World;
+
+  pivot = new THREE.Object3D();
+  pivot.add(World.getCamera());
+
+  Player.init().then(function() {
+    var playerMesh = Player.getMesh();
+    pivot.add(playerMesh);
+  });
+
+  World.add(pivot);
+
+  makeSkybox(World);
+
+  World.startRenderLoop();
 }
 
-World.init({renderCallback: function() {
-  if(window.update) window.update();
-  pivot.translateZ(-1);
-}});
+function initReceiver() {
+  window.castReceiverManager = cast.receiver.CastReceiverManager.getInstance();
+  var appConfig = new cast.receiver.CastReceiverManager.Config();
 
-var g = new THREE.BoxGeometry(10, 10, 10),
-    m = new THREE.MeshBasicMaterial({color: 0x00ff00}),
-    c = new THREE.Mesh(g, m);
+  appConfig.statusText = 'Ready to play';
+  appConfig.maxInactivity = 6000;
 
-window.world = World;
+  window.messageBus = window.castReceiverManager.getCastMessageBus('urn:x-cast:de.geekonaut.triviatime');
+  window.castReceiverManager.start(appConfig);
 
-var pivot = new THREE.Object3D();
-pivot.add(World.getCamera());
+  window.castReceiverManager.onReady = function(event) {
+    console.log('Received Ready event: ' + JSON.stringify(event.data));
+    window.castReceiverManager.setApplicationState("Application status is ready...");
+  };
 
-Player.init().then(function() {
-  var playerMesh = Player.getMesh();
-  pivot.add(playerMesh);
-});
+  window.castReceiverManager.onSenderConnected = function(event) {
+    console.log('Received Sender Connected event: ' + event.data);
+    console.log(window.castReceiverManager.getSender(event.data).userAgent);
+    startGame();
+  };
 
-World.add(pivot);
+  window.messageBus.onMessage = function(msg) {
+    switch(msg.data) {
+      case'up':
+        pivot.rotation.x -= 0.05;
+        break;
+      case 'down':
+        pivot.rotation.x += 0.05;
+        break;
+      case 'left':
+        pivot.rotation.y += 0.05;
+        break;
+      case 'right':
+        pivot.rotation.y -= 0.05;
+        break;
+    }
+  }
+}
 
-makeSkybox(World);
+/*
+function initPeerSession() {
+  var peer = new Peer({key: '7nxxqfxzhestt9'});
+  window.peer = peer;
 
-World.startRenderLoop();
+  peer.on('open', function(id) {
+    var h1 = document.createElement('h1');
+    h1.textContent = "Game ID: " + id;
+    document.body.addChild(h1);
+  });
 
-// Controls
-//
+  peer.on('connection', function(c) {
+    console.log("CONTROLS ESTABLISHED", c);
+    document.body.removeChild(document.querySelector('h1'));
+    c.on('data', function(data) {
+    });
+  });
+}
+*/
+
+window.onload = function() {
+  initReceiver();
+//  initPeerSession();
+};
