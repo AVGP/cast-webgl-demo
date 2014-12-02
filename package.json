@@ -1,0 +1,18 @@
+{
+  "name": "PlaneGameDemo",
+  "version": "1.0.0",
+  "description": "",
+  "main": "game.js",
+  "author": "Martin Naumann",
+  "license": "ISC",
+  "dependencies": {
+    "browserify": "^6.3.3",
+    "q": "^1.1.2",
+    "watchify": "^2.1.1"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build-js": "browserify game.js > index.js",
+    "dev": "watchify game.js -o index.js -dv"
+  }
+}
