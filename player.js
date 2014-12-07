@@ -12,9 +12,10 @@ var Q = require('q'),
 
     loader.load('toyplane.obj', function (object) {
       mesh = object;
-      mesh.rotation.set(0, Math.PI/2, 0);
+      mesh.scale.set(2,2,2);
+//      mesh.rotation.set(0, Math.PI/2, 0);
 
-      var material = new THREE.MeshNormalMaterial(); //{color: 0x00ff00});
+      var material = new THREE.MeshPhongMaterial({diffuseColor: 0x00ff00});
 
       mesh.traverse(function(child) {
         if(child instanceof THREE.Mesh) {
